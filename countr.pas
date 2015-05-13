@@ -16,7 +16,7 @@ begin
     repeat
       if (s.Attr and faDirectory) <> faDirectory then
       begin
-        if (Lowercase(ExtractFileExt(s.Name)) = Lowercase(ExtractFileExt(mask))) then
+        if (Lowercase(ExtractFileExt(s.Name)) = Lowercase(ExtractFileExt(mask))) or (mask = '*.*') then
         begin
           inc(fcount);  
         end;    
