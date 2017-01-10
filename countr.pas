@@ -3,10 +3,7 @@ program countr;
 {$mode objfpc}{$H+}
 uses Classes, SysUtils, StrUtils;
 
-var
-  fcount: LongInt;
-  
-procedure DoCount(mask: String; inDir: String);
+procedure DoCount(mask: String; inDir: String; var filecount: Integer);
 var
   s: TSearchRec;  
 begin
@@ -18,21 +15,23 @@ begin
       begin
         if (Lowercase(ExtractFileExt(s.Name)) = Lowercase(ExtractFileExt(mask))) or (mask = '*.*') then
         begin
-          inc(fcount);  
+          inc(filecount);  
         end;    
       end;
       if (s.Name <> '.') and (s.Name <> '..') and ((s.Attr and faDirectory) = faDirectory) then
       begin
-        DoCount(mask, IncludeTrailingPathDelimiter(inDir) + s.Name);
+        DoCount(mask, IncludeTrailingPathDelimiter(inDir) + s.Name, filecount);
       end;
     until FindNext(s) <> 0;
   end;
   FindClose(s);
 end;
 
-function main: Integer;
+procedure main;
 var
   mask, inDir: String;
+  fcount: Integer;
+  Result: Integer;
 begin
   fcount := 0;
   Result := 0;
@@ -41,7 +40,7 @@ begin
   // ParamStr(2) = mask
 
   // Directory doesn't exist?
-  if not DirectoryExists(ParamStr(1)) then Result := 1
+  if not DirectoryExists(ParamStr(1)) then Result := -1
   else inDir := ParamStr(1);
   // No mask specified?
   if ParamCount = 1 then mask := '*.*'
@@ -52,15 +51,18 @@ begin
     mask := '*' + ExtractFileExt(ParamStr(2));
   end;
   // No parameters?
-  if ParamCount = 0 then Result := 2;
+  if ParamCount = 0 then Result := -2;
 
-  if Result < 1 then DoCount(mask,inDir);
+  if Result < 1 then DoCount(mask,inDir,fcount);
+  
+  case Result of    
+    -2: writeln('USAGE: countr <path> [searchmask]');  
+    -1: writeln('ERROR: Directory not found.');
+  else
+    writeln(fcount, ' files found.');
+  end;  
 end;
 
 begin
-  case main of
-    0: writeln(fcount, ' file(s) found.');
-    1: writeln('ERROR: Directory not found.');
-    2: writeln('USAGE: countr <path> [searchmask]');
-  end;
+  main;
 end.
