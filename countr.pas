@@ -5,7 +5,7 @@ uses Classes, SysUtils, StrUtils;
 
 procedure DoCount(mask: String; inDir: String; var filecount: Integer);
 var
-  s: TSearchRec;  
+  s: TSearchRec;
 begin
   writeln('Searching for ',mask,' in ',inDir);
   if FindFirst(IncludeTrailingPathDelimiter(inDir) + '*',faAnyFile, s) = 0 then
@@ -15,8 +15,8 @@ begin
       begin
         if (Lowercase(ExtractFileExt(s.Name)) = Lowercase(ExtractFileExt(mask))) or (mask = '*.*') then
         begin
-          inc(filecount);  
-        end;    
+          inc(filecount);
+        end;
       end;
       if (s.Name <> '.') and (s.Name <> '..') and ((s.Attr and faDirectory) = faDirectory) then
       begin
@@ -27,7 +27,7 @@ begin
   FindClose(s);
 end;
 
-procedure main;
+procedure main(path: String; fmask: String);
 var
   mask, inDir: String;
   fcount: Integer;
@@ -36,33 +36,32 @@ begin
   fcount := 0;
   Result := 0;
   
-  // ParamStr(1) = path
-  // ParamStr(2) = mask
-
   // Directory doesn't exist?
-  if not DirectoryExists(ParamStr(1)) then Result := -1
-  else inDir := ParamStr(1);
+  if not DirectoryExists(path) then Result := -1
+  else inDir := path;
   // No mask specified?
-  if ParamCount = 1 then mask := '*.*'
-  else mask := ParamStr(2);
+  if Length(fmask) > 0 then mask := fmask
+  else mask := '*.*'; 
   // Bash appears to expand filemasks into actual parameters
-  if not AnsiStartsStr('*',ParamStr(2)) then
+  if not AnsiStartsStr('*',fmask) then
   begin
-    mask := '*' + ExtractFileExt(ParamStr(2));
+    mask := '*' + ExtractFileExt(fmask);
   end;
   // No parameters?
-  if ParamCount = 0 then Result := -2;
+  if (Length(path) < 1) and (Length(fmask) < 1) then Result := -2;
 
-  if Result < 1 then DoCount(mask,inDir,fcount);
-  
-  case Result of    
-    -2: writeln('USAGE: countr <path> [searchmask]');  
+  if Result = 0 then DoCount(mask,inDir,fcount);
+
+  case Result of
+    -2: writeln('USAGE: countr <path> [searchmask]');
     -1: writeln('ERROR: Directory not found.');
   else
     writeln(fcount, ' files found.');
-  end;  
+  end;
 end;
 
 begin
-  main;
+  // ParamStr(1) = path
+  // ParamStr(2) = mask  
+  main(ParamStr(1),ParamStr(2));
 end.
